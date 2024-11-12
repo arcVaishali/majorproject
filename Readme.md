@@ -28,7 +28,7 @@ migrate --reset
 
 ----
 
-# Deployed Smart Contract for creating Fungible Green Credit Token (FGCT an ERC20 Token)
+# Deployed Smart Contracts for creating Fungible Green Credit Token (FGCT an ERC20 Token)
 
 ## OUTPUT
 ```Starting migrations...
