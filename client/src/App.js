@@ -1,26 +1,21 @@
-import React, { Suspense } from "react";
-import './App.css';
-import CircularLoaderUI from "./ui/CircularLoaderUI.jsx";
-import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import LoginPage from "./components/LoginPage";
+// import Dashboard from "./components/Dashboard";
+// import UploadCert from "./components/UploadCert";
+import Marketplace from "./components/Marketplace";
 
-const HomeAppBarLayout = React.lazy(
-  () => import("./ui/HomeAppBarLayout.jsx")
+const App = () => (
+  <Router>
+    {/* <Marketplace/> */}
+    {/* <LoginPage/> */}
+    <Routes>
+      <Route path="/login" element={<LoginPage/>} />
+      {/* <Route path="/dashboard" component={Dashboard} />
+      <Route path="/upload" component={UploadCert} /> */}
+      <Route path="/marketplace" element={<Marketplace/>} />
+    </Routes>
+  </Router>
 );
-const Home = React.lazy(() => import("./ui/Home.jsx"));
-const NotFound = React.lazy(() => import("./ui/NotFound.jsx"));
-
-function App() {
-  return (
-    <Suspense fallback={<div><CircularLoaderUI /></div>}>
-      <Router>
-        <HomeAppBarLayout />
-        <Routes>
-          <Route exact path={"/"} element={<Home />} />
-          <Route exact path={"*"} element={<NotFound/>}/>
-        </Routes>
-      </Router>
-    </Suspense>
-  );
-}
 
 export default App;

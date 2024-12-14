@@ -1,6 +1,7 @@
-const webpack = require("webpack")
+const webpack = require("webpack");
 
 module.exports = function override(config) {
+  // Ensure fallback for process/browser is correctly set
   const fallback = config.resolve.fallback || {};
   Object.assign(fallback, {
     fs: false,
@@ -13,21 +14,27 @@ module.exports = function override(config) {
     path: require.resolve("path-browserify"),
     util: require.resolve("util"),
     url: require.resolve("url"),
+    'process/browser': require.resolve('process/browser') // Fix for process/browser
   });
   config.resolve.fallback = fallback;
+
+  // Add support for top-level await if needed
   const experiments = config.experiments || {};
   Object.assign(experiments, {
-    topLevelAwait: true
+    topLevelAwait: true,
   });
   config.experiments = experiments;
+
+  // Ignore source map warnings
   config.ignoreWarnings = [/Failed to parse source map/];
+
+  // Ensure process and Buffer are available globally
   config.plugins = (config.plugins || []).concat([
     new webpack.ProvidePlugin({
-      process: 'process/browser',
-      Buffer: ['buffer', 'Buffer']
-    })
+      process: "process/browser", // Providing process globally
+      Buffer: ["buffer", "Buffer"], // Providing Buffer globally
+    }),
   ]);
+
   return config;
-}
-
-
+};
