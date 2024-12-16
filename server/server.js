@@ -1,98 +1,154 @@
-require("dotenv").config();
 const express = require("express");
+const { Web3 } = require("web3");
+const contractArtifact = require("../client/src/contracts/GreenCreditToken.json"); 
+const contractABIAMM = require("../client/src/contracts/GreenCreditAMM.json"); 
 const mongoose = require("mongoose");
-const authRoutes = require("./routes/authRoutes");
-const certRoutes = require("./routes/certRoutes");
-const Web3 = require('web3');
-const GreenCreditAMMABI = require('./GreenCreditAMMABI.json');
-const GreenCreditTokenABI = require('./GreenCreditTokenABI.json');
-require('dotenv').config();
-
 const app = express();
-const PORT = process.env.PORT || 5000;
+const cors = require('cors');
 
-// Middleware
-app.use(express.json());
-app.use("/auth", authRoutes);
-app.use("/cert", certRoutes);
+// Enable CORS for all origins (development only)
+app.use(cors()); 
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log("Connected to MongoDB"))
-    .catch(err => console.log(err));
-
-const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID'));
-const ammContractAddress = '0xD3D2ab64F8A5df68f0baA8A1c5A8babADb6bcf8c'; // Example AMM contract address
-const tokenContractAddress = '0x7E2fB9590BC1F9997FDb664b4efe954769F954a1'; // Example token contract address
-const ammContract = new web3.eth.Contract(GreenCreditAMMABI, ammContractAddress);
-const tokenContract = new web3.eth.Contract(GreenCreditTokenABI, tokenContractAddress);
+// Or enable CORS for a specific origin (e.g., localhost:3000)
+// app.use(cors({
+//   origin: 'http://localhost:3000'
+// }));
 
 app.use(express.json());
 
-// MongoDB Schema for Listings
-const listingSchema = new mongoose.Schema({
-    seller: String,
-    tokenAmount: Number,
-    ethPrice: Number,
-    status: { type: String, enum: ['active', 'sold'], default: 'active' },
-    createdAt: { type: Date, default: Date.now }
+// MongoDB setup
+const uri = "mongodb+srv://vaish:9RmuwgIHW9Ygi8pT@chai-backend.dkyf8cy.mongodb.net/?retryWrites=true&w=majority&appName=Chai-backend" ;
+mongoose.connect(uri)
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('Error connecting to MongoDB', err));
+
+const certificateSchema = new mongoose.Schema({
+  uniqueId: String,
+  verified: Boolean,
+});
+const Certificate = mongoose.model("Certificate", certificateSchema);
+
+// Web3 and Contract Setup
+const web3 = new Web3("http://127.0.0.1:7545"); // Ganache RPC URL
+const contractAddress = contractArtifact.networks["5777"].address; // Match network ID
+const contract = new web3.eth.Contract(contractArtifact.abi, contractAddress);
+
+// Ganache Account Setup
+const adminAddress = "0xf940f0f1b92fe8c36d85e95e9e961ddfaff3888b"; // Use one of the Ganache accounts
+const adminPrivateKey = "4059f44c08d98eba02110e40f4b40c21562d0837ab738e491bf2778747b40190"; // Corresponding private key for adminAddress
+
+// API to Verify Certificate and Mint Tokens
+app.post("/verify-certificate", async (req, res) => {
+  try {
+    const { uniqueId, address, tokenAmount } = req.body;
+    // console.log(req.body)
+    // console.log(uniqueId , address , tokenAmount) ;
+
+    // Step 1: Check if the certificate is in the database
+    const certificate = await Certificate.findOne({ uniqueId });
+    // console.log(certificate)
+    // if (!uniqueId || !address || !tokenAmount) {
+    //     return res.status(400).json({ message: 'Missing required fields' });
+    // }
+    if (!certificate || !certificate.verified) {
+      return res.status(200).json({ message: "Invalid or unverified certificate" });
+    }
+
+    // Step 2: Mint Green Credit Tokens
+    const tx = contract.methods.mint(address, web3.utils.toWei(tokenAmount.toString(), "ether"));
+    const gas = await tx.estimateGas({ from: adminAddress });
+    const data = tx.encodeABI();
+    const nonce = await web3.eth.getTransactionCount(adminAddress);
+
+    const signedTx = await web3.eth.accounts.signTransaction(
+      {
+        to: address,
+        data,
+        gas,
+        nonce,
+        chainId: 1337, // Ganache default chain ID
+      },
+      adminPrivateKey
+    );
+
+    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    res.json({ message: "Tokens minted successfully", receipt });
+  } catch (err) {
+    console.error(err);
+    console.log("Errorrrr")
+    res.status(500).json({ error: "Something went wrong" });
+  }
 });
 
-const Listing = mongoose.model('Listing', listingSchema);
+// Add sample certificate to database (for testing)
+app.post("/add-certificate", async (req, res) => {
+  const { uniqueId } = req.body;
+  const newCert = new Certificate({ uniqueId, verified: true });
+  await newCert.save();
+  res.json({ message: "Certificate added successfully", uniqueId });
+});
 
-// Get all active listings
+const AMMcontractABI = contractABIAMM ;
+const AMMcontractAddress = "0x36341C765017578Cb148A15F8F230E972937e171";
+
+const marketplace = new web3.eth.Contract(AMMcontractABI, AMMcontractAddress);
+
+app.use(express.json());
+
+// Fetch all active listings
 app.get('/api/listings', async (req, res) => {
     try {
-        const listings = await Listing.find({ status: 'active' });
+        const listings = await marketplace.methods.fetchListings().call();
         res.json(listings);
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching listings' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch listings" });
     }
 });
 
-// Add a listing
-app.post('/api/listings', async (req, res) => {
-    const { seller, tokenAmount, ethPrice } = req.body;
-    const newListing = new Listing({ seller, tokenAmount, ethPrice });
-    
-    try {
-        await newListing.save();
-        res.status(201).json({ message: 'Listing created successfully', listing: newListing });
-    } catch (err) {
-        res.status(500).json({ message: 'Error adding listing' });
-    }
-});
-
-// Buy Green Credits (Eth to Token)
+// Buy green credits
 app.post('/api/buy/:listingId', async (req, res) => {
     const { listingId } = req.params;
     const { buyer, ethAmount } = req.body;
 
-    const listing = await Listing.findById(listingId);
-
-    if (!listing) {
-        return res.status(404).json({ message: 'Listing not found' });
-    }
-
-    // Execute the AMM contract to swap ETH for tokens
     try {
-        const ethAmountInWei = web3.utils.toWei(ethAmount.toString(), 'ether');
-        const tokensToBuy = (ethAmountInWei * listing.tokenAmount) / (listing.ethPrice * web3.utils.toWei('1', 'ether'));
+        const accounts = await web3.eth.getAccounts();
+        const receipt = await marketplace.methods.buyCredits(listingId).send({
+            from: buyer,
+            value: web3.utils.toWei(ethAmount, 'ether')
+        });
 
-        await ammContract.methods.ethToToken(tokensToBuy)
-            .send({ from: buyer, value: ethAmountInWei });
-
-        // Update the listing status after a successful purchase
-        listing.status = 'sold';
-        await listing.save();
-
-        res.json({ message: 'Transaction successful', tokensBought: tokensToBuy });
-    } catch (err) {
-        res.status(500).json({ message: 'Error during transaction', error: err });
+        res.json({ success: true, transaction: receipt });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to purchase credits" });
     }
 });
 
-// Server setup
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+const particpantscontractABI = require('../client/src/contracts/ParticipantsRegistryABI.json'); // ABI of the smart contract
+const particpantsContractAddress = '0xcc32eA4703E4e5726DC275624684f867B703ee3a';
+
+const newcontract = new web3.eth.Contract(particpantscontractABI, particpantsContractAddress);
+
+app.get('/participants', async (req, res) => {
+    try {
+        const participants = await newcontract.methods.getParticipants().call();
+        res.json(participants);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.post('/register', async (req, res) => {
+    const { walletAddress, name, credits } = req.body;
+    try {
+        const tx = await newcontract.methods.registerParticipant(name, credits).send({ from: walletAddress });
+        res.json(tx);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.listen(5000, () => {
+  console.log("Server is running on port 5000");
+});

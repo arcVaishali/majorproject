@@ -1,7 +1,7 @@
 {
   "name": "client",
   "version": "0.1.0",
-  "description": "🔥 Truffle box using React 18 and Mui v5 to get started",
+  "description": "GreenXchange",
   "private": true,
   "license": "MIT",
   "keywords": [
@@ -33,7 +33,13 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
-    "web3": "^1.10.4"
+    "web3": "^1.10.4",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14"
   },
   "scripts": {
     "start": "react-app-rewired start",

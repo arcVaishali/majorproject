@@ -1,81 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-contract GreenCreditAMM {
-    IERC20 public greenToken;  // ERC20 token representing green credits
-
-    uint256 public totalLiquidity;  // Total liquidity in the contract
-    mapping(address => uint256) public liquidity;
-
-    event LiquidityAdded(address indexed user, uint256 ethAmount, uint256 tokenAmount);
-    event LiquidityRemoved(address indexed user, uint256 ethAmount, uint256 tokenAmount);
-    event EthToTokenSwap(address indexed user, uint256 ethAmount, uint256 tokenAmount);
-    event TokenToEthSwap(address indexed user, uint256 tokenAmount, uint256 ethAmount);
-
-    constructor(address _greenToken) {
-        greenToken = IERC20(_greenToken);
+contract GreenCreditMarketplace {
+    struct Listing {
+        address seller;
+        uint256 tokenAmount;
+        uint256 ethPrice;
+        bool isActive;
     }
 
-    // Add liquidity to the pool (ETH + GreenCreditTokens)
-    function addLiquidity(uint256 tokenAmount) external payable {
-        require(msg.value > 0 && tokenAmount > 0, "Provide ETH and Tokens");
-        require(greenToken.transferFrom(msg.sender, address(this), tokenAmount), "Token transfer failed");
+    mapping(uint256 => Listing) public listings;
+    uint256 public listingCount;
 
-        // Update liquidity balance
-        liquidity[msg.sender] += msg.value;
-        totalLiquidity += msg.value;
+    event ListingAdded(uint256 listingId, address seller, uint256 tokenAmount, uint256 ethPrice);
+    event PurchaseMade(uint256 listingId, address buyer, uint256 amountPaid);
 
-        emit LiquidityAdded(msg.sender, msg.value, tokenAmount);
+    function addListing(uint256 tokenAmount, uint256 ethPrice) public {
+        listingCount++;
+        listings[listingCount] = Listing(msg.sender, tokenAmount, ethPrice, true);
+
+        emit ListingAdded(listingCount, msg.sender, tokenAmount, ethPrice);
     }
 
-    // Remove liquidity from the pool
-    function removeLiquidity(uint256 ethAmount, uint256 tokenAmount) external {
-        require(ethAmount > 0 && tokenAmount > 0, "Invalid amounts");
-        require(liquidity[msg.sender] >= ethAmount, "Insufficient liquidity");
+    function buyCredits(uint256 listingId) public payable {
+        Listing storage listing = listings[listingId];
 
-        // Update liquidity balance
-        liquidity[msg.sender] -= ethAmount;
-        totalLiquidity -= ethAmount;
+        require(listing.isActive, "Listing is not active");
+        require(msg.value >= listing.ethPrice, "Insufficient ETH sent");
 
-        // Transfer ETH and tokens back to the user
-        payable(msg.sender).transfer(ethAmount);
-        require(greenToken.transfer(msg.sender, tokenAmount), "Token transfer failed");
+        // Transfer ETH to the seller
+        payable(listing.seller).transfer(msg.value);
 
-        emit LiquidityRemoved(msg.sender, ethAmount, tokenAmount);
+        // Mark listing as inactive
+        listing.isActive = false;
+
+        emit PurchaseMade(listingId, msg.sender, msg.value);
     }
 
-    // Swap ETH for GreenCreditToken (Minting)
-    function ethToToken(uint256 minTokens) external payable {
-        uint256 tokenReserve = greenToken.balanceOf(address(this));
-        uint256 ethReserve = address(this).balance;
+    function fetchListings() public view returns (Listing[] memory) {
+        Listing[] memory activeListings = new Listing[](listingCount);
+        uint256 count = 0;
 
-        uint256 tokensOut = (msg.value * tokenReserve) / ethReserve;
-        require(tokensOut >= minTokens, "Insufficient output");
+        for (uint256 i = 1; i <= listingCount; i++) {
+            if (listings[i].isActive) {
+                activeListings[count] = listings[i];
+                count++;
+            }
+        }
 
-        require(greenToken.transfer(msg.sender, tokensOut), "Token transfer failed");
-
-        emit EthToTokenSwap(msg.sender, msg.value, tokensOut);
-    }
-
-    // Swap GreenCreditToken for ETH (Burning)
-    function tokenToEth(uint256 tokenAmount, uint256 minEth) external {
-        uint256 tokenReserve = greenToken.balanceOf(address(this));
-        uint256 ethReserve = address(this).balance;
-
-        uint256 ethOut = (tokenAmount * ethReserve) / tokenReserve;
-        require(ethOut >= minEth, "Insufficient output");
-
-        require(greenToken.transferFrom(msg.sender, address(this), tokenAmount), "Token transfer failed");
-        payable(msg.sender).transfer(ethOut);
-
-        emit TokenToEthSwap(msg.sender, tokenAmount, ethOut);
-    }
-
-    // View current reserves of ETH and GreenCreditTokens
-    function getReserves() external view returns (uint256 ethReserve, uint256 tokenReserve) {
-        ethReserve = address(this).balance;
-        tokenReserve = greenToken.balanceOf(address(this));
+        return activeListings;
     }
 }

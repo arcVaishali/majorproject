@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, TextField, Box, Paper, Grid, Typography } from "@mui/material";
+import { Button, TextField, Box, Paper, Grid, Typography , Link } from "@mui/material";
 import Web3 from "web3";
 
 const LoginPage = () => {
@@ -115,9 +115,11 @@ const LoginPage = () => {
             fullWidth
             onClick={connectWallet}
             sx={{
-              borderColor: "#3f51b5",
+              borderColor: "secondary",
               color: "#3f51b5",
-              "&:hover": { borderColor: "#303f9f" },
+              "&:hover": { borderColor: "primary" },
+              marginLeft:"15px",
+              marginY:"5px"
             }}
           >
             Connect Wallet
@@ -128,21 +130,25 @@ const LoginPage = () => {
             </Typography>
           )}
           <Grid item xs={12}>
+           
             <Button
               variant="contained"
               fullWidth
-              onClick={handleLogin}
+              // onClick={handleLogin}
               sx={{
-                backgroundColor: "#3f51b5",
-                "&:hover": { backgroundColor: "#303f9f" },
+                backgroundColor: "primary",
+                "&:hover": { backgroundColor: "secondary" },
               }}
             >
+              <Link href="/credit" color="inherit" underline="hover">
               Login
+              </Link>
             </Button>
+            
           </Grid>
         </Grid>
         <Typography variant="body2" sx={{ marginBottom: 2 }}>
-          Don't have an account? <a href="#">Sign Up</a>
+          Don't have an account? <a href="/signup">Sign Up</a>
         </Typography>
       </Paper>
     </Box>

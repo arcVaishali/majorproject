@@ -2,21 +2,41 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GreenCreditToken is ERC20 {
-    address public admin;
+interface IParticipantsRegistry {
+    function isParticipantRegistered(address participant) external view returns (bool);
+    function registerParticipantFromToken(
+        address _participant,
+        string calldata _name,
+        uint256 _credits
+    ) external;
+}
 
-    constructor() ERC20("GreenCreditToken", "GCT") {
-        admin = msg.sender;
+contract GreenCreditToken is ERC20, Ownable {
+    mapping(string => bool) public verifiedCertificates; // Stores verified certificate IDs
+    IParticipantsRegistry public participantsRegistry;
+
+    constructor(address _participantsRegistry) Ownable(msg.sender) ERC20("GreenCreditToken", "GCT") {
+        participantsRegistry = IParticipantsRegistry(_participantsRegistry);
     }
 
-    function mint(address to, uint256 amount) external {
-        require(msg.sender == admin, "Only admin can mint");
+    // Mint tokens after certificate verification
+    function mintGreenCredits(
+        address to,
+        uint256 amount,
+        string memory certificateId,
+        string memory participantName
+    ) external onlyOwner {
+        require(!verifiedCertificates[certificateId], "Certificate already used");
+
+        // Register participant if not already registered
+        if (!participantsRegistry.isParticipantRegistered(to)) {
+            participantsRegistry.registerParticipantFromToken(to, participantName, amount);
+        }
+
+        // Mark certificate as used and mint tokens
+        verifiedCertificates[certificateId] = true;
         _mint(to, amount);
-    }
-
-    function burn(address from, uint256 amount) external {
-        require(msg.sender == admin, "Only admin can burn");
-        _burn(from, amount);
     }
 }
