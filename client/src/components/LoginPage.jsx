@@ -7,6 +7,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [account, setAccount] = useState(null);
   const [web3, setWeb3] = useState(null);
+  const bgUrl ='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80';
 
   const handleLogin = async () => {
     // Validate form fields
@@ -21,32 +22,32 @@ const LoginPage = () => {
       password,
     };
 
-    try {
-      // Mock API call to authenticate user
-      const response = await fetch("https://your-backend-api.com/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginData),
-      });
+    // try {
+    //   // Mock API call to authenticate user
+    //   const response = await fetch("https://your-backend-api.com/login", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify(loginData),
+    //   });
 
-      const data = await response.json();
+    //   const data = await response.json();
 
-      if (response.ok) {
-        // Assuming the response contains a token or user info
-        localStorage.setItem("authToken", data.token); // Store token in localStorage
-        alert("Login successful!");
-        // Redirect or update the state to show the logged-in view
-        // Example: window.location.href = "/dashboard"; // Navigate to the dashboard
-      } else {
-        // If the login fails, display the error message
-        alert(`Login failed: ${data.message}`);
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-      alert("An error occurred. Please try again.");
-    }
+    //   if (response.ok) {
+    //     // Assuming the response contains a token or user info
+    //     localStorage.setItem("authToken", data.token); // Store token in localStorage
+    //     alert("Login successful!");
+    //     // Redirect or update the state to show the logged-in view
+    //     // Example: window.location.href = "/dashboard"; // Navigate to the dashboard
+    //   } else {
+    //     // If the login fails, display the error message
+    //     alert(`Login failed: ${data.message}`);
+    //   }
+    // } catch (error) {
+    //   console.error("Error during login:", error);
+    //   alert("An error occurred. Please try again.");
+    // }
   };
 
   const connectWallet = async () => {
@@ -70,11 +71,12 @@ const LoginPage = () => {
   return (
     <Box
       sx={{
+        minHeight: "100vh",
+        width: "100vw",
+        background: `linear-gradient(rgba(0,0,0,0.6),rgba(0,128,0,0.3)), url(${bgUrl}) center/cover no-repeat fixed`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f4f6f8",
       }}
     >
       <Paper
@@ -84,9 +86,12 @@ const LoginPage = () => {
           maxWidth: 400,
           textAlign: "center",
           boxShadow: 3,
+          borderRadius: 4,
+          backdropFilter: "blur(6px)",
+          background: "rgba(255,255,255,0.6)",
         }}
       >
-        <Typography variant="h4" sx={{ marginBottom: 2 }}>
+        <Typography variant="h4" sx={{ marginBottom: 2, fontWeight: 700 }}>
           Login to Your Account
         </Typography>
 
@@ -118,8 +123,8 @@ const LoginPage = () => {
               borderColor: "secondary",
               color: "#3f51b5",
               "&:hover": { borderColor: "primary" },
-              marginLeft:"15px",
-              marginY:"5px"
+              marginLeft: "15px",
+              marginY: "5px",
             }}
           >
             Connect Wallet
@@ -130,21 +135,19 @@ const LoginPage = () => {
             </Typography>
           )}
           <Grid item xs={12}>
-           
             <Button
               variant="contained"
               fullWidth
-              // onClick={handleLogin}
+              onClick={handleLogin}
               sx={{
                 backgroundColor: "primary",
                 "&:hover": { backgroundColor: "secondary" },
               }}
             >
               <Link href="/credit" color="inherit" underline="hover">
-              Login
+                Login
               </Link>
             </Button>
-            
           </Grid>
         </Grid>
         <Typography variant="body2" sx={{ marginBottom: 2 }}>

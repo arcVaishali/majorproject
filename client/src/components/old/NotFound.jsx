@@ -7,7 +7,7 @@ import {
   createTheme,
   ThemeProvider
 } from "@mui/material";
-import {AppTheme} from "../lib/theme";
+import {AppTheme} from "../../lib/theme";
 
 function NotFound(props) {
   return (

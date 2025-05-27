@@ -1,6 +1,8 @@
 const express = require("express");
 const { Web3 } = require("web3");
-const contractArtifact = require("../client/src/contracts/GreenCreditToken.json"); 
+const fs = require("fs");
+// const contractArtifact = require("../client/src/contracts/GreenCreditToken.json"); 
+const contractArtifact = JSON.parse(fs.readFileSync('../client/src/contracts/GreenCreditToken.json', 'utf8'));
 const contractABIAMM = require("../client/src/contracts/GreenCreditAMM.json"); 
 const mongoose = require("mongoose");
 const app = express();
@@ -22,6 +24,7 @@ mongoose.connect(uri)
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('Error connecting to MongoDB', err));
 
+// Certificate Schema
 const certificateSchema = new mongoose.Schema({
   uniqueId: String,
   verified: Boolean,
@@ -29,9 +32,11 @@ const certificateSchema = new mongoose.Schema({
 const Certificate = mongoose.model("Certificate", certificateSchema);
 
 // Web3 and Contract Setup
-const web3 = new Web3("http://127.0.0.1:7545"); // Ganache RPC URL
+const web3 = new Web3("http://127.0.0.1:8545"); // Ganache RPC URL
 const contractAddress = contractArtifact.networks["5777"].address; // Match network ID
-const contract = new web3.eth.Contract(contractArtifact.abi, contractAddress);
+console.log(contractArtifact.abi , contractAddress)
+const contractArtifactAbi = contractArtifact.abi
+let contract = new web3.eth.Contract(contractArtifactAbi, contractAddress);
 
 // Ganache Account Setup
 const adminAddress = "0xf940f0f1b92fe8c36d85e95e9e961ddfaff3888b"; // Use one of the Ganache accounts

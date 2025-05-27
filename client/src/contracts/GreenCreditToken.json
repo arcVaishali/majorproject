@@ -15188,12 +15188,12 @@
         }
       },
       "links": {},
-      "address": "0xD3794B4960384dB7B70123ace068213b9E87b07c",
-      "transactionHash": "0x7ab3a75565083a4898ff2c9aeedcecd1ea4a57354c07bfe97d6a14133323c17f"
+      "address": "0x36341C765017578Cb148A15F8F230E972937e171",
+      "transactionHash": "0xb669d76f58a9e17cb09e104a0ffcd82e9da283ded6fe53188b9b6a851d677912"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2024-12-15T23:42:34.971Z",
+  "updatedAt": "2025-05-27T05:45:56.812Z",
   "networkType": "ethereum",
   "devdoc": {
     "errors": {
