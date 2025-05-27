@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Web3 from "web3";
 import {
   Box,
   Container,
@@ -58,6 +59,8 @@ const bgUrl =
 
 const Dashboard1 = () => {
   // data + loading
+  const [account, setAccount] = useState(null);
+  const [web3, setWeb3] = useState(null);
   const [entityData, setEntityData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +69,7 @@ const Dashboard1 = () => {
   const [showMint, setShowMint] = useState(true);
   const [showTransfer, setShowTransfer] = useState(true);
   const [showBurn, setShowBurn] = useState(true);
+
 
   // fetch demo data
   useEffect(() => {
@@ -98,6 +102,26 @@ const Dashboard1 = () => {
     ];
     setEntityData(data);
     setLoading(false);
+
+    const connectWallet = async () => {
+      if (window.ethereum) {
+        const web3Instance = new Web3(window.ethereum);
+        try {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          const accounts = await web3Instance.eth.getAccounts();
+          setWeb3(web3Instance);
+          setAccount(accounts[0]);
+          // alert("Wallet Connected: " + accounts[0]);
+          // return accounts[0] ;
+        } catch (error) {
+          console.error("Failed to connect wallet", error);
+          // alert("Please install MetaMask or another Web3 wallet.");
+        }
+      } else {
+        alert("Please install MetaMask!");
+      }
+    };
+    connectWallet()
   }, []);
 
   // summary stats
@@ -206,11 +230,15 @@ const Dashboard1 = () => {
     <Avatar sx={{ bgcolor: green[400], width: 64, height: 64, mr: 2 }}>U</Avatar>
     <Box sx={{ flexGrow: 1 }}>
       <Typography variant="h6" color={common.white}>
-        Vaishnavi <VerifiedUserIcon sx={{ fontSize: 18, color: green[200], ml: 1 }} />
+        Vaishali <VerifiedUserIcon sx={{ fontSize: 18, color: green[200], ml: 1 }} />
       </Typography>
-      <Typography variant="body2" color={common.white}>
-        0x123…abc
-      </Typography>
+      {/* <Typography variant="body2" color={common.white}> */}
+        {
+          <Typography variant="body2" sx={{ marginTop: 2, color: "#757575" }}>
+                        Connected as: {account}
+          </Typography>
+                    }
+      {/* </Typography> */}
       <Chip label="NGO Partner" size="small" color="success" sx={{ mt: 1 }} />
     </Box>
     <Button

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Web3 from "web3" ;
 import {
   Container,
   Paper,
@@ -40,17 +41,44 @@ import {
   TimelineDot,
   TimelineOppositeContent,
 } from "@mui/lab";
+import { useEffect } from "react";
 
 const bgUrl =
   "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80";
 
 const Profile = () => {
   const [tab, setTab] = useState(0);
-  const [editName, setEditName] = useState("Vaishnavi");
-  const [editEmail, setEditEmail] = useState("vaishnavi@email.com");
+  const [account, setAccount] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [editName, setEditName] = useState("Vaishali");
+  const [editEmail, setEditEmail] = useState("vaishali@email.com");
   const [editWallet, setEditWallet] = useState("0x123...abc");
   const [notif, setNotif] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+      const connectWallet = async () => {
+            if (window.ethereum) {
+              const web3Instance = new Web3(window.ethereum);
+              try {
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                const accounts = await web3Instance.eth.getAccounts();
+                setWeb3(web3Instance);
+                setAccount(accounts[0]);
+                setEditWallet(accounts[0])
+                // alert("Wallet Connected: " + accounts[0]);
+                // return accounts[0] ;
+              } catch (error) {
+                console.error("Failed to connect wallet", error);
+                // alert("Please install MetaMask or another Web3 wallet.");
+              }
+            } else {
+              alert("Please install MetaMask!");
+            }
+          };
+          connectWallet() // Call the check function
+  }, []); // Empty dependency array ensures this runs only once when the component mounts
+  
 
   // dummy recent activity
   const recentActivities = [
