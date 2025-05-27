@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
-import { AppTheme } from "../lib/theme";
-import {Web3Context} from "../lib/Web3Context";
+import { AppTheme } from "../../lib/theme";
+import {Web3Context} from "../../lib/Web3Context";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import {
   Box,

@@ -83,7 +83,7 @@ const Navbar = () => {
           {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
             <img
-              src="https://i.ibb.co/5kkV1CR/greenxchange-logo-no-background.png"
+              src="https://i.postimg.cc/tC5Sfb9R/greenxchange-logo-no-background.png"
               alt="GreenXchange Logo"
               style={{
                 height: "40px",

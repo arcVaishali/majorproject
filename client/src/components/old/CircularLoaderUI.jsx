@@ -1,5 +1,5 @@
 import React from "react";
-import { AppTheme } from "../lib/theme";
+import { AppTheme } from "../../lib/theme";
 import {
   Grid, Box,
   Typography,
